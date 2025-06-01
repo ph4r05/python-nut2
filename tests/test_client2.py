@@ -1,12 +1,18 @@
-import sys
-import unittest
 import asyncio
-import threading
-from nut2 import PyNUTClient, PyNUTError
 
 # make logger debug print to stdout
 import logging
-logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s',  handlers=[logging.StreamHandler(sys.stdout)])
+import sys
+import threading
+import unittest
+
+from nut2 import PyNUTClient, PyNUTError
+
+logging.basicConfig(
+    level=logging.DEBUG,
+    format="%(asctime)s - %(levelname)s - %(message)s",
+    handlers=[logging.StreamHandler(sys.stdout)],
+)
 
 
 class MockNUTProtocol(asyncio.Protocol):
@@ -33,97 +39,137 @@ class MockNUTProtocol(asyncio.Protocol):
 
     def run_command(self):
         if self.broken and not self.broken_username and self.command == b"USERNAME %s\n" % self.valid:
-            return b'OK\n'
+            return b"OK\n"
         elif self.broken:
-            return b'ERR\n'
+            return b"ERR\n"
         elif self.command == b"HELP\n":
-            return b'Commands: HELP VER GET LIST SET INSTCMD LOGIN LOGOUT USERNAME PASSWORD STARTTLS\n'
+            return b"Commands: HELP VER GET LIST SET INSTCMD LOGIN LOGOUT USERNAME PASSWORD STARTTLS\n"
         elif self.command == b"VER\n":
-            return b'Network UPS Tools upsd 2.7.1 - http://www.networkupstools.org/\n'
+            return b"Network UPS Tools upsd 2.7.1 - http://www.networkupstools.org/\n"
         elif self.command == b"GET CMDDESC %s %s\n" % (self.valid, self.valid):
-            return b'CMDDESC '+self.valid+b' '+self.valid+b' '+self.valid_desc+b'\n'
+            return b"CMDDESC " + self.valid + b" " + self.valid + b" " + self.valid_desc + b"\n"
         elif self.command == b"LIST UPS\n":
-            return b'BEGIN LIST UPS\nUPS '+self.valid+b' '+self.valid_desc+b'\nUPS Test_UPS2 "Test UPS 2"\nEND LIST UPS\n'
+            return (
+                b"BEGIN LIST UPS\nUPS "
+                + self.valid
+                + b" "
+                + self.valid_desc
+                + b'\nUPS Test_UPS2 "Test UPS 2"\nEND LIST UPS\n'
+            )
         elif self.command == b"LIST VAR %s\n" % self.valid:
-            return b'BEGIN LIST VAR '+self.valid+b'\nVAR '+self.valid+b' battery.charge "100"\nVAR '+self.valid+b' battery.voltage "14.44"\nEND LIST VAR '+self.valid+b'\n'
+            return (
+                b"BEGIN LIST VAR "
+                + self.valid
+                + b"\nVAR "
+                + self.valid
+                + b' battery.charge "100"\nVAR '
+                + self.valid
+                + b' battery.voltage "14.44"\nEND LIST VAR '
+                + self.valid
+                + b"\n"
+            )
         elif self.command.startswith(b"LIST VAR"):
-            return b'ERR INVALID-ARGUMENT\n'
+            return b"ERR INVALID-ARGUMENT\n"
         elif self.command == b"LIST CMD %s\n" % self.valid:
-            return b'BEGIN LIST CMD '+self.valid+b'\nCMD '+self.valid+b' '+self.valid+b'\nEND LIST CMD '+self.valid+b'\n'
+            return (
+                b"BEGIN LIST CMD "
+                + self.valid
+                + b"\nCMD "
+                + self.valid
+                + b" "
+                + self.valid
+                + b"\nEND LIST CMD "
+                + self.valid
+                + b"\n"
+            )
         elif self.command.startswith(b"LIST CMD"):
-            return b'ERR INVALID-ARGUMENT\n'
+            return b"ERR INVALID-ARGUMENT\n"
         elif self.command == b"LIST RW %s\n" % self.valid:
-            return b'BEGIN LIST RW '+self.valid+b'\nRW '+self.valid+b' '+self.valid+b' "test"\nEND LIST RW '+self.valid+b'\n'
+            return (
+                b"BEGIN LIST RW "
+                + self.valid
+                + b"\nRW "
+                + self.valid
+                + b" "
+                + self.valid
+                + b' "test"\nEND LIST RW '
+                + self.valid
+                + b"\n"
+            )
         elif self.command.startswith(b"LIST RW"):
-            return b'ERR INVALID-ARGUMENT\n'
+            return b"ERR INVALID-ARGUMENT\n"
         elif self.command == b"LIST CLIENTS %s\n" % self.valid:
-            return b'BEGIN LIST CLIENTS\nCLIENT '+self.valid+b' '+self.valid+b'\nEND LIST CLIENTS\n'
+            return b"BEGIN LIST CLIENTS\nCLIENT " + self.valid + b" " + self.valid + b"\nEND LIST CLIENTS\n"
         elif self.command.startswith(b"LIST CLIENTS"):
-            return b'ERR INVALID-ARGUMENT\n'
+            return b"ERR INVALID-ARGUMENT\n"
         elif self.command == b"LIST ENUM %s %s\n" % (self.valid, self.valid):
-            return (b'BEGIN LIST ENUM %s %s\n' % (self.valid, self.valid)) + (b'ENUM %s %s %s\nEND LIST ENUM %s %s\n' % (self.valid,
-                                                              self.valid, self.valid_desc, self.valid, self.valid))
+            return (b"BEGIN LIST ENUM %s %s\n" % (self.valid, self.valid)) + (
+                b"ENUM %s %s %s\nEND LIST ENUM %s %s\n"
+                % (self.valid, self.valid, self.valid_desc, self.valid, self.valid)
+            )
 
         elif self.command == b"LIST RANGE %s %s\n" % (self.valid, self.valid):
-            return (b'BEGIN LIST RANGE %s %s\n' % (self.valid, self.valid)) + (b'RANGE %s %s %s %s\nEND LIST RANGE %s %s\n' % (self.valid,
-                                                                   self.valid, self.valid_desc, self.valid_desc, self.valid, self.valid))
+            return (b"BEGIN LIST RANGE %s %s\n" % (self.valid, self.valid)) + (
+                b"RANGE %s %s %s %s\nEND LIST RANGE %s %s\n"
+                % (self.valid, self.valid, self.valid_desc, self.valid_desc, self.valid, self.valid)
+            )
         elif self.command == b"SET VAR %s %s %s\n" % (self.valid, self.valid, self.valid):
-            return b'OK\n'
+            return b"OK\n"
         elif self.command.startswith(b"SET"):
-            return b'ERR ACCESS-DENIED\n'
-        elif self.command == b"INSTCMD %s %s\n"% (self.valid, self.valid):
-            return b'OK\n'
+            return b"ERR ACCESS-DENIED\n"
+        elif self.command == b"INSTCMD %s %s\n" % (self.valid, self.valid):
+            return b"OK\n"
         elif self.command.startswith(b"INSTCMD"):
-            return b'ERR CMD-NOT-SUPPORTED\n'
+            return b"ERR CMD-NOT-SUPPORTED\n"
         # TODO: LOGIN/LOGOUT commands
         elif self.command == b"USERNAME %s\n" % self.valid:
-            return b'OK\n'
+            return b"OK\n"
         elif self.command.startswith(b"USERNAME"):
-            return b'ERR\n'  # FIXME: What does it say on invalid password?
+            return b"ERR\n"  # FIXME: What does it say on invalid password?
         elif self.command == b"PASSWORD %s\n" % self.valid:
-            return b'OK\n'
+            return b"OK\n"
         elif self.command.startswith(b"PASSWORD"):
-            return b'ERR\n'  # FIXME: ^
+            return b"ERR\n"  # FIXME: ^
         elif self.command == b"STARTTLS\n":
-            return b'ERR FEATURE-NOT-CONFIGURED\n'
+            return b"ERR FEATURE-NOT-CONFIGURED\n"
         elif self.command == b"MASTER %s\n" % self.valid:
-            return b'OK MASTER-GRANTED\n'
+            return b"OK MASTER-GRANTED\n"
         elif self.command == b"FSD %s\n" % self.valid and self.ok:
-            return b'OK FSD-SET\n'
+            return b"OK FSD-SET\n"
         elif self.command == b"FSD %s\n" % self.valid:
-            return b'ERR\n'
+            return b"ERR\n"
         elif self.command == b"GET NUMLOGINS %s\n" % self.valid:
-            return b'NUMLOGINS %s 1\n' % self.valid
+            return b"NUMLOGINS %s 1\n" % self.valid
         elif self.command.startswith(b"GET NUMLOGINS"):
-            return b'ERR UNKNOWN-UPS\n'
+            return b"ERR UNKNOWN-UPS\n"
         elif self.command == b"GET UPSDESC %s\n" % self.valid:
-            return b'UPSDESC %s %s\n' % (self.valid, self.valid_desc)
+            return b"UPSDESC %s %s\n" % (self.valid, self.valid_desc)
         elif self.command.startswith(b"GET UPSDESC"):
-            return b'ERR UNKNOWN-UPS\n'
+            return b"ERR UNKNOWN-UPS\n"
         elif self.command == b"GET VAR %s %s\n" % (self.valid, self.valid):
             return b'VAR %s %s "100"\n' % (self.valid, self.valid)
         elif self.command.startswith(b"GET VAR %s" % self.valid):
-            return b'ERR VAR-NOT-SUPPORTED\n'
+            return b"ERR VAR-NOT-SUPPORTED\n"
         elif self.command.startswith(b"GET VAR "):
-            return b'ERR UNKNOWN-UPS\n'
+            return b"ERR UNKNOWN-UPS\n"
         elif self.command.startswith(b"GET VAR"):
-            return b'ERR INVALID-ARGUMENT\n'
+            return b"ERR INVALID-ARGUMENT\n"
         elif self.command == b"GET TYPE %s %s\n" % (self.valid, self.valid):
-            return b'TYPE %s %s RW STRING:3\n' % (self.valid, self.valid)
+            return b"TYPE %s %s RW STRING:3\n" % (self.valid, self.valid)
         elif self.command.startswith(b"GET TYPE %s" % self.valid):
-            return b'ERR VAR-NOT-SUPPORTED\n'
+            return b"ERR VAR-NOT-SUPPORTED\n"
         elif self.command.startswith(b"GET TYPE"):
-            return b'ERR INVALID-ARGUMENT\n'
+            return b"ERR INVALID-ARGUMENT\n"
         elif self.command == b"GET DESC %s %s\n" % (self.valid, self.valid):
-            return b'DESC %s %s %s\n' % (self.valid, self.valid, self.valid_desc)
+            return b"DESC %s %s %s\n" % (self.valid, self.valid, self.valid_desc)
         elif self.command.startswith(b"GET DESC"):
-            return b'ERR-INVALID-ARGUMENT\n'
+            return b"ERR-INVALID-ARGUMENT\n"
         elif self.command == b"GET CMDDESC %s %s" % (self.valid, self.valid):
-            return b'CMDDESC %s %s %s\n' % (self.valid, self.valid, self.valid_desc)
+            return b"CMDDESC %s %s %s\n" % (self.valid, self.valid, self.valid_desc)
         elif self.command.startswith(b"GET CMDDESC"):
-            return b'ERR INVALID-ARGUMENT'
+            return b"ERR INVALID-ARGUMENT"
         else:
-            return b'ERR UNKNOWN-COMMAND\n'
+            return b"ERR UNKNOWN-COMMAND\n"
 
     def data_received(self, data):
         self.command = data
@@ -139,6 +185,7 @@ class MockNUTProtocol(asyncio.Protocol):
             logging.debug("Sending response: %s", response.decode())
             self.transport.write(response)
 
+
 async def start_mock_nut_server(host="127.0.0.1", port=3493):
     loop = asyncio.get_running_loop()
     server = await loop.create_server(MockNUTProtocol, host, port, reuse_address=True)
@@ -153,7 +200,7 @@ class TestWithMockNUTServer(unittest.TestCase):
         cls.invalid = "does_not_exist"
         cls.valid_ups_name = "Test UPS 1"
         cls.valid_desc = cls.valid_ups_name
-        cls.valid_value = '100'
+        cls.valid_value = "100"
         cls.valid_command_desc = cls.valid_desc
 
         cls.loop = asyncio.new_event_loop()
@@ -182,9 +229,9 @@ class TestWithMockNUTServer(unittest.TestCase):
     def test_get_ups_vars_valid_ups(self):
         client = self.client()
         vars = client.list_vars(self.valid)
-        self.assertEquals(type(vars), dict)
-        self.assertEquals(len(vars), 2)
-        self.assertEquals(vars['battery.charge'], '100')
+        self.assertEqual(type(vars), dict)
+        self.assertEqual(len(vars), 2)
+        self.assertEqual(vars["battery.charge"], "100")
 
     def test_help(self):
         client = self.client()
@@ -199,7 +246,7 @@ class TestWithMockNUTServer(unittest.TestCase):
     def test_get_var(self):
         client = self.client()
         val = client.get_var(self.valid, self.valid)
-        self.assertEqual(val, '100')
+        self.assertEqual(val, "100")
 
     def test_description(self):
         client = self.client()
@@ -287,7 +334,7 @@ class TestWithMockNUTServer(unittest.TestCase):
         client = self.client()
 
         async def broken_reader():
-            return "BEGIN LIST RANGE test var\nRANGE test var \"10\" \"20\"\n"  # no END
+            return 'BEGIN LIST RANGE test var\nRANGE test var "10" "20"\n'  # no END
 
         client._async_send_and_receive = lambda *a, **k: broken_reader()
         with self.assertRaises(PyNUTError):
@@ -299,4 +346,3 @@ class TestWithMockNUTServer(unittest.TestCase):
         self.assertIsInstance(clients, dict)
         self.assertIn("test", clients)
         self.assertIn("test", clients["test"])
-

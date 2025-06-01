@@ -1,3 +1,5 @@
 nose
 coveralls
 mock
+pytest
+pytest-cov

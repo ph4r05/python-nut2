@@ -83,6 +83,30 @@ The following information is copied from the original PyNUT README:
     upsname to fit your configuration.
 
 
+Development
+===========
+
+Install pre-commit hooks defined by ``.pre-commit-config.yaml``
+
+.. code-block:: shell
+
+   pip3 install -U pre-commit
+   pre-commit install
+
+Auto fix
+--------
+
+.. code-block:: shell
+
+   pre-commit run --all-files
+
+Plugin version update
+---------------------
+
+.. code-block:: shell
+
+   pre-commit autoupdate
+
 .. _PyNUT: https://github.com/networkupstools/nut/tree/master/scripts/python
 .. _Network UPS Tools: http://www.networkupstools.org/
 .. _Network UPS Tools developers: https://github.com/networkupstools

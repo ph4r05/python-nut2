@@ -22,15 +22,16 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-import asyncio
-import telnetlib
 import logging
+import telnetlib
 
 __version__ = "3.0.0"
 __all__ = ["PyNUTError", "PyNUTClient"]
 
+
 class PyNUTError(Exception):
     """Base class for custom exceptions."""
+
 
 class PyNUTClient(object):
     """Access NUT (Network UPS Tools) servers."""
@@ -100,25 +101,17 @@ class PyNUTClient(object):
         logging.debug("Connecting to host")
 
         try:
-            self._srv_handler = telnetlib.Telnet(
-                self._host, self._port, timeout=self._timeout
-            )
+            self._srv_handler = telnetlib.Telnet(self._host, self._port, timeout=self._timeout)
 
             if self._login is not None:
                 self._srv_handler.write(b"USERNAME %s\n" % self._login.encode("utf-8"))
-                result = self._srv_handler.read_until(b"\n", self._timeout).decode(
-                    "utf-8"
-                )
+                result = self._srv_handler.read_until(b"\n", self._timeout).decode("utf-8")
                 if not result == "OK\n":
                     raise PyNUTError(result.replace("\n", ""))
 
             if self._password is not None:
-                self._srv_handler.write(
-                    b"PASSWORD %s\n" % self._password.encode("utf-8")
-                )
-                result = self._srv_handler.read_until(b"\n", self._timeout).decode(
-                    "utf-8"
-                )
+                self._srv_handler.write(b"PASSWORD %s\n" % self._password.encode("utf-8"))
+                result = self._srv_handler.read_until(b"\n", self._timeout).decode("utf-8")
                 if not result == "OK\n":
                     raise PyNUTError(result.replace("\n", ""))
         except telnetlib.socket.error:
@@ -148,9 +141,7 @@ class PyNUTClient(object):
         if result != "BEGIN LIST UPS\n":
             raise PyNUTError(result.replace("\n", ""))
 
-        result = self._srv_handler.read_until(b"END LIST UPS\n", self._timeout).decode(
-            "utf-8"
-        )
+        result = self._srv_handler.read_until(b"END LIST UPS\n", self._timeout).decode("utf-8")
 
         ups_dict = {}
         for line in result.split("\n"):
@@ -173,9 +164,7 @@ class PyNUTClient(object):
         if result != "BEGIN LIST VAR %s\n" % ups:
             raise PyNUTError(result.replace("\n", ""))
 
-        result = self._srv_handler.read_until(
-            b"END LIST VAR %s\n" % ups.encode("utf-8"), self._timeout
-        ).decode("utf-8")
+        result = self._srv_handler.read_until(b"END LIST VAR %s\n" % ups.encode("utf-8"), self._timeout).decode("utf-8")
         offset = len("VAR %s " % ups)
         end_offset = 0 - (len("END LIST VAR %s\n" % ups) + 1)
 
@@ -199,9 +188,7 @@ class PyNUTClient(object):
         if result != "BEGIN LIST CMD %s\n" % ups:
             raise PyNUTError(result.replace("\n", ""))
 
-        result = self._srv_handler.read_until(
-            b"END LIST CMD %s\n" % ups.encode("utf-8"), self._timeout
-        ).decode("utf-8")
+        result = self._srv_handler.read_until(b"END LIST CMD %s\n" % ups.encode("utf-8"), self._timeout).decode("utf-8")
         offset = len("CMD %s " % ups)
         end_offset = 0 - (len("END LIST CMD %s\n" % ups) + 1)
 
@@ -211,13 +198,8 @@ class PyNUTClient(object):
 
             # For each var we try to get the available description
             try:
-                self._srv_handler.write(
-                    b"GET CMDDESC %s %s\n"
-                    % (ups.encode("utf-8"), command.encode("utf-8"))
-                )
-                temp = self._srv_handler.read_until(b"\n", self._timeout).decode(
-                    "utf-8"
-                )
+                self._srv_handler.write(b"GET CMDDESC %s %s\n" % (ups.encode("utf-8"), command.encode("utf-8")))
+                temp = self._srv_handler.read_until(b"\n", self._timeout).decode("utf-8")
                 if temp.startswith("CMDDESC"):
                     desc_offset = len("CMDDESC %s %s " % (ups, command))
                     commands[command] = temp[desc_offset:-1].split('"')[1]
@@ -247,9 +229,7 @@ class PyNUTClient(object):
         if result != "BEGIN LIST CLIENTS\n":
             raise PyNUTError(result.replace("\n", ""))
 
-        result = self._srv_handler.read_until(
-            b"END LIST CLIENTS\n", self._timeout
-        ).decode("utf-8")
+        result = self._srv_handler.read_until(b"END LIST CLIENTS\n", self._timeout).decode("utf-8")
 
         clients = {}
         for line in result.split("\n"):
@@ -274,9 +254,7 @@ class PyNUTClient(object):
         if result != "BEGIN LIST RW %s\n" % ups:
             raise PyNUTError(result.replace("\n", ""))
 
-        result = self._srv_handler.read_until(
-            b"END LIST RW %s\n" % ups.encode("utf-8"), self._timeout
-        ).decode("utf-8")
+        result = self._srv_handler.read_until(b"END LIST RW %s\n" % ups.encode("utf-8"), self._timeout).decode("utf-8")
         offset = len("VAR %s" % ups)
         end_offset = 0 - (len("END LIST RW %s\n" % ups) + 1)
 
@@ -294,9 +272,7 @@ class PyNUTClient(object):
         """
         logging.debug("list_enum from '%s'...", ups)
 
-        self._srv_handler.write(
-            b"LIST ENUM %s %s\n" % (ups.encode("utf-8"), var.encode("utf-8"))
-        )
+        self._srv_handler.write(b"LIST ENUM %s %s\n" % (ups.encode("utf-8"), var.encode("utf-8")))
         result = self._srv_handler.read_until(b"\n", self._timeout).decode("utf-8")
         if result != "BEGIN LIST ENUM %s %s\n" % (ups, var):
             raise PyNUTError(result.replace("\n", ""))
@@ -309,10 +285,7 @@ class PyNUTClient(object):
         end_offset = 0 - (len("END LIST ENUM %s %s\n" % (ups, var)) + 1)
 
         try:
-            return [
-                c[offset:].split('"')[1].strip()
-                for c in result[:end_offset].split("\n")
-            ]
+            return [c[offset:].split('"')[1].strip() for c in result[:end_offset].split("\n")]
         except IndexError:
             raise PyNUTError(result.replace("\n", ""))
 
@@ -323,9 +296,7 @@ class PyNUTClient(object):
         """
         logging.debug("list_range from '%s'...", ups)
 
-        self._srv_handler.write(
-            b"LIST RANGE %s %s\n" % (ups.encode("utf-8"), var.encode("utf-8"))
-        )
+        self._srv_handler.write(b"LIST RANGE %s %s\n" % (ups.encode("utf-8"), var.encode("utf-8")))
         result = self._srv_handler.read_until(b"\n", self._timeout).decode("utf-8")
         if result != "BEGIN LIST RANGE %s %s\n" % (ups, var):
             raise PyNUTError(result.replace("\n", ""))
@@ -338,10 +309,7 @@ class PyNUTClient(object):
         end_offset = 0 - (len("END LIST RANGE %s %s\n" % (ups, var)) + 1)
 
         try:
-            return [
-                c[offset:].split('"')[1].strip()
-                for c in result[:end_offset].split("\n")
-            ]
+            return [c[offset:].split('"')[1].strip() for c in result[:end_offset].split("\n")]
         except IndexError:
             raise PyNUTError(result.replace("\n", ""))
 
@@ -354,8 +322,7 @@ class PyNUTClient(object):
         logging.debug("set_var '%s' from '%s' to '%s'", var, ups, value)
 
         self._srv_handler.write(
-            b"SET VAR %s %s %s\n"
-            % (ups.encode("utf-8"), var.encode("utf-8"), value.encode("utf-8"))
+            b"SET VAR %s %s %s\n" % (ups.encode("utf-8"), var.encode("utf-8"), value.encode("utf-8"))
         )
         result = self._srv_handler.read_until(b"\n", self._timeout).decode("utf-8")
         if result != "OK\n":
@@ -365,9 +332,7 @@ class PyNUTClient(object):
         """Get the value of a variable."""
         logging.debug("get_var called...")
 
-        self._srv_handler.write(
-            b"GET VAR %s %s\n" % (ups.encode("utf-8"), var.encode("utf-8"))
-        )
+        self._srv_handler.write(b"GET VAR %s %s\n" % (ups.encode("utf-8"), var.encode("utf-8")))
         result = self._srv_handler.read_until(b"\n", self._timeout).decode("utf-8")
         try:
             # result = 'VAR %s %s "%s"\n' % (ups, var, value)
@@ -384,9 +349,7 @@ class PyNUTClient(object):
         """Get a variable's description."""
         logging.debug("var_description called...")
 
-        self._srv_handler.write(
-            b"GET DESC %s %s\n" % (ups.encode("utf-8"), var.encode("utf-8"))
-        )
+        self._srv_handler.write(b"GET DESC %s %s\n" % (ups.encode("utf-8"), var.encode("utf-8")))
         result = self._srv_handler.read_until(b"\n", self._timeout).decode("utf-8")
         try:
             # result = 'DESC %s %s "%s"\n' % (ups, var, description)
@@ -398,9 +361,7 @@ class PyNUTClient(object):
         """Get a variable's type."""
         logging.debug("var_type called...")
 
-        self._srv_handler.write(
-            b"GET TYPE %s %s\n" % (ups.encode("utf-8"), var.encode("utf-8"))
-        )
+        self._srv_handler.write(b"GET TYPE %s %s\n" % (ups.encode("utf-8"), var.encode("utf-8")))
         result = self._srv_handler.read_until(b"\n", self._timeout).decode("utf-8")
         try:
             # result = 'TYPE %s %s %s\n' % (ups, var, type)
@@ -416,9 +377,7 @@ class PyNUTClient(object):
         """Get a command's description."""
         logging.debug("command_description called...")
 
-        self._srv_handler.write(
-            b"GET CMDDESC %s %s\n" % (ups.encode("utf-8"), command.encode("utf-8"))
-        )
+        self._srv_handler.write(b"GET CMDDESC %s %s\n" % (ups.encode("utf-8"), command.encode("utf-8")))
         result = self._srv_handler.read_until(b"\n", self._timeout).decode("utf-8")
         try:
             # result = 'CMDDESC %s %s "%s"' % (ups, command, description)
@@ -430,9 +389,7 @@ class PyNUTClient(object):
         """Send a command to the specified UPS."""
         logging.debug("run_command called...")
 
-        self._srv_handler.write(
-            b"INSTCMD %s %s\n" % (ups.encode("utf-8"), command.encode("utf-8"))
-        )
+        self._srv_handler.write(b"INSTCMD %s %s\n" % (ups.encode("utf-8"), command.encode("utf-8")))
         result = self._srv_handler.read_until(b"\n", self._timeout).decode("utf-8")
         if result != "OK\n":
             raise PyNUTError(result.replace("\n", ""))

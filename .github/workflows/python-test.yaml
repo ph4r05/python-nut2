@@ -30,7 +30,7 @@ jobs:
 
       - name: Run tests
         run: |
-          nosetests --with-coverage --cover-package=nut2
+          pytest --cov=nut2 tests/
 
       - name: Upload coverage to Coveralls
         env:

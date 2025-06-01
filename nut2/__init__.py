@@ -23,8 +23,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
 import asyncio
-import telnetlib3
 import logging
+
+import telnetlib3
 
 __all__ = ["PyNUTError", "PyNUTClient"]
 
@@ -101,9 +102,7 @@ class PyNUTClient:
             raise PyNUTError(f"Connection failed: {e}")
 
     def _send_and_receive(self, command, expect="\n", timeout=None):
-        return self._loop.run_until_complete(
-            self._async_send_and_receive(command, expect, timeout)
-        )
+        return self._loop.run_until_complete(self._async_send_and_receive(command, expect, timeout))
 
     def _read_until(self, expect="\n", timeout=None):
         return self._loop.run_until_complete(self._async_read_until(expect, timeout))
@@ -112,16 +111,12 @@ class PyNUTClient:
         if isinstance(expect, str):
             expect = expect.encode()
         try:
-            r = await asyncio.wait_for(
-                self._reader.readuntil(expect), timeout or self._timeout
-            )
+            r = await asyncio.wait_for(self._reader.readuntil(expect), timeout or self._timeout)
             if isinstance(r, bytes):
                 r = r.decode("utf-8")
             return r
         except asyncio.TimeoutError:
-            raise PyNUTError(
-                f"Timeout waiting for response to: {expect.decode().strip()}"
-            )
+            raise PyNUTError(f"Timeout waiting for response to: {expect.decode().strip()}")
 
     async def _async_send(self, command):
         logging.debug(f"Sending command: {command}")
@@ -132,9 +127,7 @@ class PyNUTClient:
         return await self._async_read_until(expect, timeout)
 
     def description(self, ups):
-        return self._loop.run_until_complete(
-            asyncio.wait_for(self.async_description(ups), timeout=self._timeout)
-        )
+        return self._loop.run_until_complete(asyncio.wait_for(self.async_description(ups), timeout=self._timeout))
 
     async def async_description(self, ups):
         response = await self._async_send_and_receive(f"GET UPSDESC {ups}")
@@ -149,9 +142,7 @@ class PyNUTClient:
         The result is a dictionary containing 'key->val' pairs of
         'UPSName' and 'UPS Description'.
         """
-        return self._loop.run_until_complete(
-            asyncio.wait_for(self.async_list_ups(), timeout=self._timeout)
-        )
+        return self._loop.run_until_complete(asyncio.wait_for(self.async_list_ups(), timeout=self._timeout))
 
     async def async_list_ups(self):
         start = await self._async_send_and_receive("LIST UPS")
@@ -189,17 +180,12 @@ class PyNUTClient:
     def __exit__(self, exc_t, exc_v, trace):
         self.logout()
 
-    def get(self, ups, var):
-        return self.get_var(ups, var)
-
     def list_vars(self, ups):
         """Get all available vars from the specified UPS.
 
         The result is a dictionary containing 'key->val' pairs of all available vars.
         """
-        return self._loop.run_until_complete(
-            asyncio.wait_for(self.async_list_vars(ups), timeout=self._timeout)
-        )
+        return self._loop.run_until_complete(asyncio.wait_for(self.async_list_vars(ups), timeout=self._timeout))
 
     async def async_list_vars(self, ups):
         await self._async_send(f"LIST VAR {ups}")
@@ -207,7 +193,7 @@ class PyNUTClient:
         while True:
             line = await asyncio.wait_for(self._reader.readuntil(b"\n"), timeout=self._timeout)
             line = line.decode().strip()
-            if line.startswith(f"BEGIN LIST VAR"):
+            if line.startswith("BEGIN LIST VAR"):
                 continue
             if line.startswith(f"END LIST VAR {ups}"):
                 break
@@ -235,9 +221,7 @@ class PyNUTClient:
         The result is a dict object with command name as key and a description
         of the command as value.
         """
-        return self._loop.run_until_complete(
-            asyncio.wait_for(self.async_list_commands(ups), timeout=self._timeout)
-        )
+        return self._loop.run_until_complete(asyncio.wait_for(self.async_list_commands(ups), timeout=self._timeout))
 
     async def async_list_commands(self, ups):
         logging.debug("list_commands called...")
@@ -281,9 +265,7 @@ class PyNUTClient:
         Returns the list of connected clients from the NUT server.
         The result is a dictionary containing 'UPSName' → list of client names.
         """
-        return self._loop.run_until_complete(
-            asyncio.wait_for(self.async_list_clients(ups), timeout=self._timeout)
-        )
+        return self._loop.run_until_complete(asyncio.wait_for(self.async_list_clients(ups), timeout=self._timeout))
 
     async def async_list_clients(self, ups=None):
         if ups:
@@ -312,7 +294,7 @@ class PyNUTClient:
         clients = {}
         for line in buffer.splitlines():
             if line.startswith("CLIENT "):
-                parts = line[len("CLIENT "):].split(" ", 1)
+                parts = line[len("CLIENT ") :].split(" ", 1)
                 if len(parts) == 2:
                     host, upsname = parts
                     clients.setdefault(upsname, []).append(host)
@@ -323,9 +305,7 @@ class PyNUTClient:
 
         The result is presented as a dictionary containing 'key -> value' pairs.
         """
-        return self._loop.run_until_complete(
-            asyncio.wait_for(self.async_list_rw_vars(ups), timeout=self._timeout)
-        )
+        return self._loop.run_until_complete(asyncio.wait_for(self.async_list_rw_vars(ups), timeout=self._timeout))
 
     async def async_list_rw_vars(self, ups):
         await self._async_send(f"LIST RW {ups}")
@@ -354,9 +334,7 @@ class PyNUTClient:
 
         The result is presented as a list.
         """
-        return self._loop.run_until_complete(
-            asyncio.wait_for(self.async_list_enum(ups, var), timeout=self._timeout)
-        )
+        return self._loop.run_until_complete(asyncio.wait_for(self.async_list_enum(ups, var), timeout=self._timeout))
 
     async def async_list_enum(self, ups, var):
         await self._async_send(f"LIST ENUM {ups} {var}")
@@ -386,9 +364,7 @@ class PyNUTClient:
 
         The result is presented as a list of strings.
         """
-        return self._loop.run_until_complete(
-            asyncio.wait_for(self.async_list_range(ups, var), timeout=self._timeout)
-        )
+        return self._loop.run_until_complete(asyncio.wait_for(self.async_list_range(ups, var), timeout=self._timeout))
 
     async def async_list_range(self, ups, var):
         logging.debug("list_range called...")
@@ -414,10 +390,7 @@ class PyNUTClient:
 
         offset = len(f"RANGE {ups} {var}")
         try:
-            return [
-                c[offset:].split('"')[1].strip()
-                for c in lines
-            ]
+            return [c[offset:].split('"')[1].strip() for c in lines]
         except IndexError:
             raise PyNUTError("\n".join(lines))
 
@@ -432,9 +405,7 @@ class PyNUTClient:
             raise PyNUTError(response.strip())
 
     def get_var(self, ups, var):
-        return self._loop.run_until_complete(
-            asyncio.wait_for(self.async_get_var(ups, var), timeout=self._timeout)
-        )
+        return self._loop.run_until_complete(asyncio.wait_for(self.async_get_var(ups, var), timeout=self._timeout))
 
     async def async_get_var(self, ups, var):
         response = await self._async_send_and_receive(f"GET VAR {ups} {var}")
@@ -463,9 +434,7 @@ class PyNUTClient:
 
     def var_type(self, ups, var):
         """Get a variable's type."""
-        return self._loop.run_until_complete(
-            asyncio.wait_for(self.async_var_type(ups, var), timeout=self._timeout)
-        )
+        return self._loop.run_until_complete(asyncio.wait_for(self.async_var_type(ups, var), timeout=self._timeout))
 
     async def async_var_type(self, ups, var):
         await self._async_send(f"GET TYPE {ups} {var}")
@@ -511,9 +480,7 @@ class PyNUTClient:
 
     def fsd(self, ups):
         """Send MASTER and FSD commands."""
-        return self._loop.run_until_complete(
-            asyncio.wait_for(self.async_fsd(ups), timeout=self._timeout)
-        )
+        return self._loop.run_until_complete(asyncio.wait_for(self.async_fsd(ups), timeout=self._timeout))
 
     async def async_fsd(self, ups):
         logging.debug("MASTER called...")
@@ -529,9 +496,7 @@ class PyNUTClient:
             raise PyNUTError(result.decode().strip())
 
     def num_logins(self, ups):
-        return self._loop.run_until_complete(
-            asyncio.wait_for(self.async_num_logins(ups), timeout=self._timeout)
-        )
+        return self._loop.run_until_complete(asyncio.wait_for(self.async_num_logins(ups), timeout=self._timeout))
 
     async def async_num_logins(self, ups):
         await self._async_send(f"GET NUMLOGINS {ups}")
@@ -547,17 +512,13 @@ class PyNUTClient:
         raise PyNUTError(line)
 
     def help(self):
-        return self._loop.run_until_complete(
-            asyncio.wait_for(self.async_help(), timeout=self._timeout)
-        )
+        return self._loop.run_until_complete(asyncio.wait_for(self.async_help(), timeout=self._timeout))
 
     async def async_help(self):
         return await self._async_send_and_receive("HELP")
 
     def ver(self):
-        return self._loop.run_until_complete(
-            asyncio.wait_for(self.async_ver(), timeout=self._timeout)
-        )
+        return self._loop.run_until_complete(asyncio.wait_for(self.async_ver(), timeout=self._timeout))
 
     async def async_ver(self):
         return await self._async_send_and_receive("VER")
