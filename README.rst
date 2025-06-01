@@ -1,9 +1,6 @@
 nut2
 ====
 
-.. image:: https://travis-ci.org/rshipp/python-nut2.svg?branch=master
-   :target: https://travis-ci.org/rshipp/python-nut2
-   :alt: Build Status
 .. image:: https://coveralls.io/repos/rshipp/python-nut2/badge.png?branch=master
    :target: https://coveralls.io/r/rshipp/python-nut2?branch=master
    :alt: Test Coverage
@@ -13,6 +10,17 @@ nut2
 .. image:: http://img.shields.io/pypi/v/nut2.svg
    :target: https://pypi.python.org/pypi/nut2
    :alt: PyPi Version
+
+
+Project Origin and Python 3.13 Support
+--------------------------------------
+
+This repository is based on the original `python-nut2` project by Ryan Shipp: https://github.com/rshipp/python-nut2
+
+We have extended the project to add support for Python 3.13, as the standard library's `telnetlib` is deprecated. The package now uses `telnetlib3` for telnet communication.
+
+Nut2
+----
 
 This is an API overhaul of PyNUT_, a Python library to allow communication with NUT
 (`Network UPS Tools`_) servers.

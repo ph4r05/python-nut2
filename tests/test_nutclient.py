@@ -3,7 +3,7 @@
 
 # This source code is provided for testing/debuging purpose ;)
 
-from nut2 import PyNUTClient
+from nut2.__init__ import PyNUTClient
 import sys
 
 if __name__ == "__main__" :

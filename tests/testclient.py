@@ -6,7 +6,7 @@ try:
 except ImportError:
     from unittest.mock import Mock
 
-from nut2 import PyNUTClient, PyNUTError
+from nut2.nut2_old import PyNUTClient, PyNUTError
 
 class TestClient(unittest.TestCase):
 
@@ -28,7 +28,7 @@ class TestClient(unittest.TestCase):
 
     def test_init_with_args(self):
         PyNUTClient(connect=False, login='test', password='test',
-                host='test', port=1)
+                       host='test', port=1)
 
     def test_supports_context_manager(self):
         try:
@@ -52,13 +52,13 @@ class TestClient(unittest.TestCase):
     def test_connect_broken(self):
         telnetlib.Telnet = MockServer
         client = PyNUTClient(login=self.valid, password=self.valid,
-                connect=False)
+                                connect=False)
         self.assertRaises(PyNUTError, client._connect)
 
     def test_connect_credentials(self):
         try:
             PyNUTClient(login=self.valid, password=self.valid,
-                    debug=True)
+                           debug=True)
         except TypeError:
             pass
         except PyNUTError:
@@ -70,7 +70,7 @@ class TestClient(unittest.TestCase):
         try:
             telnetlib.Telnet = MockServer
             PyNUTClient(login=self.valid, password=self.valid,
-                    debug=True)
+                           debug=True)
         except TypeError:
             pass
         except PyNUTError:
