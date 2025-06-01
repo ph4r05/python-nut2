@@ -1,3 +1,6 @@
 nose
 coveralls
 mock
+pytest
+pytest-cov
+telnetlib3
