@@ -24,6 +24,7 @@ jobs:
 
       - name: Install dependencies
         run: |
+          python -m ensurepip --upgrade && python -m pip install --upgrade setuptools
           pip install -r requirements-testing.txt
           pip install coveralls
           python setup.py install
