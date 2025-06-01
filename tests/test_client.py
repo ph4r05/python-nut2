@@ -5,7 +5,9 @@ import unittest
 from mockserver import MockServer
 
 if sys.version_info >= (3, 13):
-    raise unittest.SkipTest("test_client.py tests are only supported on Python 3.11 or lower")
+    import pytest
+
+    pytest.skip("Skipping test_client.py on Python >= 3.13 (telnetlib removed)", allow_module_level=True)
 
 try:
     from mock import Mock
