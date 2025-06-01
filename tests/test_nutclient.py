@@ -5,7 +5,7 @@
 
 import sys
 
-from nut2.__init__ import PyNUTClient
+from nut2 import PyNUTClient
 
 if __name__ == "__main__":
 
